@@ -25,8 +25,8 @@ pub enum Type {
     Bool, I8, U8, I16, U16, I32, U32, I64, U64, I128, U128, F32, F64,
     Range,
     RefStr, String,
-    Array, Tuple, Vec, 
-    CPtr, Ptr, NonNull, Ref, RefMut, Box, Rc,
+    Array, Tuple, Vec,
+    CPtr, Ptr, NonNull, Ref, RefMut, Box, Rc, Arc,
     Option, Result,
     BTreeSet, HashSet,
     BTreeMap, HashMap,
@@ -34,7 +34,7 @@ pub enum Type {
 
 impl Type {
     /// Returns `true` for the generalized pointer types such as raw/smart pointers and references, otherwise returns `false`.
-    pub fn is_pointer( &self ) -> bool { *self >= Type::CPtr && *self <= Type::Rc }
+    pub fn is_pointer( &self ) -> bool { *self >= Type::CPtr && *self <= Type::Arc }
 }
 
 use std::cmp::Ordering;
@@ -55,14 +55,14 @@ impl PartialOrd for Type {
 
 impl Display for Type { fn fmt( &self, f: &mut Formatter ) -> fmt::Result { write!( f, "{}", TYPE_STR[ *self as usize ])}}
 
-const TYPE_STR: [Id;35] = [
+const TYPE_STR: [Id; 36] = [
     "?",
     "struct", "enum",
     "bool", "i8", "u8", "i16", "u16", "i32", "u32", "i64", "u64", "i128", "u128", "f32", "f64",
     "Range",
     "&str", "String",
-    "[]", "()", "Vec", 
-    "*const", "*mut", "NonNull", "&", "&mut", "Box", "Rc",
+    "[]", "()", "Vec",
+    "*const", "*mut", "NonNull", "&", "&mut", "Box", "Rc", "Arc",
     "Option", "Result",
     "BTreeSet", "HashSet",
     "BTreeMap", "HashMap",
@@ -126,7 +126,7 @@ impl Display for Member {
         match *self {
             Member::Field( ref field ) =>
                 write!( f, "{}:{}", field.id, &field.tyname.clone().unwrap_or_default() ),
-            Member::Variant( ref variant ) => 
+            Member::Variant( ref variant ) =>
                 write!( f, "{}|", variant.id ),
         }
     }
@@ -176,7 +176,7 @@ fn expand_field( node: &mut Node<Member> ) -> bool {
             expand( &mut child );
         }
         true
-    }).unwrap_or( false ) 
+    }).unwrap_or( false )
 }
 
 fn expand_variant( node: &mut Node<Member> ) -> bool {
@@ -279,6 +279,13 @@ impl<T> Reflection for std::rc::Rc<T> where T: ?Sized + Reflection {
     fn ty() -> Type { Type::Rc }
     fn name() -> Name { Some( format!( "Rc<{}>", name_!(T) ))}
     fn schema( id: Id ) -> Schema { field( id, Type::Rc, name!(Self), expander!(Self) )}
+    fn members() -> Schemas { - field( "_", ty!(T), name!(T), expander!(T) )}
+}
+
+impl<T> Reflection for std::sync::Arc<T> where T: ?Sized + Reflection {
+    fn ty() -> Type { Type::Arc }
+    fn name() -> Name { Some( format!( "Arc<{}>", name_!(T) ))}
+    fn schema( id: Id ) -> Schema { field( id, Type::Arc, name!(Self), expander!(Self) )}
     fn members() -> Schemas { - field( "_", ty!(T), name!(T), expander!(T) )}
 }
 
