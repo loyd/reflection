@@ -22,7 +22,7 @@ pub type Name = Option<String>;
 pub enum Type {
     Unknown,
     Struct, Enum,
-    Bool, I8, U8, I16, U16, I32, U32, I64, U64, I128, U128, F32, F64,
+    Bool, I8, U8, I16, U16, I32, U32, I64, U64, I128, U128, F32, F64, USize, ISize,
     Range,
     RefStr, String,
     Array, Tuple, Vec,
@@ -55,10 +55,10 @@ impl PartialOrd for Type {
 
 impl Display for Type { fn fmt( &self, f: &mut Formatter ) -> fmt::Result { write!( f, "{}", TYPE_STR[ *self as usize ])}}
 
-const TYPE_STR: [Id; 36] = [
+const TYPE_STR: [Id; 38] = [
     "?",
     "struct", "enum",
-    "bool", "i8", "u8", "i16", "u16", "i32", "u32", "i64", "u64", "i128", "u128", "f32", "f64",
+    "bool", "i8", "u8", "i16", "u16", "i32", "u32", "i64", "u64", "i128", "u128", "f32", "f64", "USize", "ISize",
     "Range",
     "&str", "String",
     "[]", "()", "Vec",
@@ -219,6 +219,8 @@ impl Reflection for i128 { fn ty() -> Type { Type::I128 } fn schema( id: Id ) ->
 impl Reflection for u128 { fn ty() -> Type { Type::U128 } fn schema( id: Id ) -> Schema { terminal( id, Type::U128 )}}
 impl Reflection for f32  { fn ty() -> Type { Type::F32  } fn schema( id: Id ) -> Schema { terminal( id, Type::F32  )}}
 impl Reflection for f64  { fn ty() -> Type { Type::F64  } fn schema( id: Id ) -> Schema { terminal( id, Type::F64  )}}
+impl Reflection for usize{ fn ty() -> Type { Type::USize} fn schema( id: Id ) -> Schema { terminal( id, Type::USize)}}
+impl Reflection for isize{ fn ty() -> Type { Type::ISize} fn schema( id: Id ) -> Schema { terminal( id, Type::ISize)}}
 
 impl<T:Reflection> Reflection for std::ops::Range<T> {
     fn ty() -> Type { Type::Range }
